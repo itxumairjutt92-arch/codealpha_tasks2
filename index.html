@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calculator</title>
+<style>
+:root{--bg1:#1b1035;--bg2:#0f172a;--text:#f5f3ff;--muted:#a9a3d6;--glass:rgba(255,255,255,.07);--line:rgba(255,255,255,.13);--key:rgba(255,255,255,.09);--keyh:rgba(255,255,255,.17);--op:rgba(167,139,250,.28);--oph:rgba(167,139,250,.45);--fn:rgba(255,110,196,.2);--fnh:rgba(255,110,196,.36);--a:#ff6ec4;--b:#7873f5;--shadow:rgba(0,0,0,.45);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg1:#fbeeff;--bg2:#e3ecff;--text:#26204d;--muted:#6d6796;--glass:rgba(255,255,255,.7);--line:rgba(70,50,140,.14);--key:rgba(255,255,255,.9);--keyh:#fff;--op:rgba(120,115,245,.2);--oph:rgba(120,115,245,.35);--fn:rgba(255,110,196,.2);--fnh:rgba(255,110,196,.35);--shadow:rgba(80,60,160,.25)}}
+:root[data-theme="dark"]{--bg1:#1b1035;--bg2:#0f172a;--text:#f5f3ff}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;display:grid;place-items:center;padding:20px 14px;font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;color:var(--text);background:radial-gradient(600px 400px at 15% 10%,rgba(255,110,196,.28),transparent 60%),radial-gradient(600px 450px at 90% 95%,rgba(120,115,245,.3),transparent 60%),linear-gradient(135deg,var(--bg1),var(--bg2)) fixed}
+.calc{width:min(380px,100%);padding:22px;border-radius:32px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(20px);box-shadow:0 30px 70px var(--shadow)}
+.screen{padding:12px 8px 20px;text-align:right;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+#exp{min-height:1.5em;color:var(--muted);font-size:1.1rem;word-break:break-all;margin-bottom:6px}
+#res{font-weight:300;font-size:3.4rem;line-height:1.1;letter-spacing:-1px;word-break:break-all;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent;transition:font-size .15s}
+#res.err{font-size:1.5rem;-webkit-text-fill-color:var(--a)}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.keys button{height:clamp(54px,9.5vh,72px);border:1px solid var(--line);border-radius:20px;background:var(--key);color:var(--text);font:inherit;font-size:1.5rem;cursor:pointer;transition:transform .12s,background .2s,box-shadow .2s}
+.keys button:hover{background:var(--keyh);transform:translateY(-2px)}
+.keys button:active,.keys button.press{transform:scale(.92);background:var(--keyh)}
+.keys .op{background:var(--op);color:var(--b);font-size:1.8rem;font-weight:600}
+.keys .op:hover{background:var(--oph)}
+.keys .fn{background:var(--fn);color:var(--a);font-size:1.25rem;font-weight:600}
+.keys .fn:hover{background:var(--fnh)}
+.keys .eq{background:linear-gradient(135deg,var(--a),var(--b));color:#fff;border:0;font-size:1.9rem;box-shadow:0 10px 26px rgba(120,115,245,.5)}
+.keys .eq:hover{background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 14px 32px rgba(255,110,196,.55)}
+@media(max-width:380px){.keys{gap:9px}.calc{padding:16px;border-radius:26px}#res{font-size:2.9rem}}
+:root[data-theme="light"]{--bg1:#fbeeff;--bg2:#e3ecff;--text:#26204d;--muted:#6d6796;--glass:rgba(255,255,255,.7);--line:rgba(70,50,140,.14);--key:rgba(255,255,255,.9);--keyh:#fff;--op:rgba(120,115,245,.2);--oph:rgba(120,115,245,.35);--fn:rgba(255,110,196,.2);--fnh:rgba(255,110,196,.35);--shadow:rgba(80,60,160,.25)}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.brand{font-size:.8rem;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+.tools{display:flex;gap:8px}
+.tool{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--key);color:var(--text);cursor:pointer;font-size:1rem;transition:.2s}
+.tool:hover{background:var(--keyh);transform:translateY(-2px)}
+.hist{max-height:0;overflow:hidden;border-radius:18px;background:var(--key);border:1px solid transparent;transition:max-height .35s,margin .35s}
+.hist.open{max-height:190px;overflow:auto;margin-bottom:14px;border-color:var(--line)}
+.hist div{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;font-size:.9rem;color:var(--muted);cursor:pointer;transition:.2s}
+.hist div:hover{background:var(--keyh);color:var(--text)}
+.hist b{color:var(--text);font-weight:600}
+.hist p{padding:14px;text-align:center;color:var(--muted);font-size:.85rem}
+.keys button{position:relative;overflow:hidden}
+.rip{position:absolute;border-radius:50%;background:rgba(255,255,255,.4);transform:scale(0);animation:rip .5s ease-out;pointer-events:none}
+@keyframes rip{to{transform:scale(3.2);opacity:0}}
+#res{cursor:pointer}
+#res.pop{animation:pop .25s}
+@keyframes pop{from{transform:scale(.94);opacity:.6}}
+</style>
+</head>
+<body>
+<main class="calc">
+  <div class="top"><span class="brand">Calculator</span><div class="tools"><button class="tool" id="hbtn" title="History (H)" aria-label="History">🕘</button><button class="tool" id="tbtn" title="Theme (T)" aria-label="Toggle theme">🌓</button></div></div>
+  <div class="hist" id="hist"></div>
+  <div class="screen"><div id="exp"></div><div id="res" title="Click to copy">0</div></div>
+  <div class="keys" id="keys">
+    <button class="fn" data-k="AC" aria-label="Clear all">AC</button>
+    <button class="fn" data-k="DEL" aria-label="Backspace">⌫</button>
+    <button class="fn" data-k="%" aria-label="Percent">%</button>
+    <button class="op" data-k="÷" aria-label="Divide">÷</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <button class="op" data-k="×" aria-label="Multiply">×</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button class="op" data-k="−" aria-label="Subtract">−</button>
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button class="op" data-k="+" aria-label="Add">+</button>
+    <button data-k="±" aria-label="Toggle sign">±</button><button data-k="0">0</button><button data-k=".">.</button>
+    <button class="eq" data-k="=" aria-label="Equals">=</button>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id),isOp=c=>'+−×÷'.includes(c);
+let expr='',last='',done=false,err=false,errMsg='';
+
+function evalExpr(s){
+  const t=s.match(/\d+\.?\d*%?|\.\d+%?|[+−×÷]/g)||[],items=[];let neg=false;
+  for(const x of t){
+    if(isOp(x)){if(!items.length||typeof items[items.length-1]==='string'){if(x==='−')neg=!neg}else items.push(x)}
+    else{let v=parseFloat(x);const p=x.endsWith('%');if(neg){v=-v;neg=false}items.push({v,p})}
+  }
+  while(typeof items[items.length-1]==='string')items.pop();
+  if(!items.length)return null;
+  const a=[items[0]];
+  for(let i=1;i<items.length;i+=2){
+    const op=items[i],b=items[i+1];
+    if(op==='×'||op==='÷'){
+      const l=a.pop(),lv=l.p?l.v/100:l.v,bv=b.p?b.v/100:b.v;
+      if(op==='÷'&&bv===0)return NaN;
+      a.push({v:op==='×'?lv*bv:lv/bv,p:false});
+    }else a.push(op,b);
+  }
+  let tot=a[0].p?a[0].v/100:a[0].v;
+  for(let i=1;i<a.length;i+=2){const b=a[i+1],bv=b.p?tot*b.v/100:b.v;tot=a[i]==='+'?tot+bv:tot-bv}
+  return tot;
+}
+function str(r){
+  if(!isFinite(r))return null;r=parseFloat(r.toPrecision(12));
+  if(Math.abs(r)>=1e15)return null;
+  let s=Math.abs(r)<1?r.toFixed(10).replace(/\.?0+$/,''):String(r);
+  if(s===''||s==='-0')s='0';return s.replace('-','−');
+}
+const fmt=s=>s.replace(/^(−?)(\d+)/,(m,g,d)=>g+d.replace(/\B(?=(\d{3})+(?!\d))/g,','));
+const pretty=s=>s.replace(/([\d.%])([+×÷−])/g,'$1 $2 ').replace(/([+×÷−]) ?([+×÷−])/g,'$1 $2');
+
+function render(){
+  const hasOp=/[\d.%][+−×÷]/.test(expr);let big,top='';
+  if(err){big=errMsg;top=pretty(expr)}
+  else if(done){top=pretty(last)+' =';big=fmt(expr)}
+  else if(hasOp||expr.endsWith('%')){
+    const r=evalExpr(expr),s=r===null||isNaN(r)?null:str(r);
+    top=pretty(expr);big=s===null?'—':fmt(s);
+  }else big=expr===''?'0':fmt(expr);
+  $('exp').textContent=top||'\u00a0';$('res').textContent=big;$('res').classList.toggle('err',err);
+  if(!err)$('res').style.fontSize=big.length>16?'1.6rem':big.length>12?'2.1rem':big.length>9?'2.7rem':'';
+  else $('res').style.fontSize='';
+}
+function press(k){
+  if(err){expr='';err=false;done=false;if(k==='AC'||k==='DEL')return render()}
+  if(/\d/.test(k)){
+    if(done){expr='';done=false}
+    if(expr.endsWith('%')||expr.length>40)return;
+    if(expr.match(/[\d.]*$/)[0]==='0')expr=expr.slice(0,-1);
+    expr+=k;
+  }else if(k==='.'){
+    if(done){expr='';done=false}
+    const seg=expr.match(/[\d.]*$/)[0];
+    if(seg.includes('.')||expr.endsWith('%'))return;
+    expr+=seg===''?'0.':'.';
+  }else if(isOp(k)){
+    done=false;
+    if(expr===''){if(k==='−')expr='−';return render()}
+    if(expr==='−')return;
+    if(isOp(expr.slice(-1))){
+      if(k==='−'&&'×÷'.includes(expr.slice(-1))&&expr.length>1)expr+=k;
+      else{expr=expr.replace(/[+−×÷]+$/,'');if(expr===''&&k!=='−')return render();expr+=k}
+    }else expr+=k;
+  }else if(k==='%'){if(/\d$/.test(expr))expr+='%'}
+  else if(k==='±'){
+    const m=expr.match(/^(.*?)(−?)(\d+\.?\d*%?|\.\d+%?)$/);if(!m)return;
+    const[,g,s,n]=m,unary=g===''||isOp(g.slice(-1));
+    expr=s&&unary?g+n:s?g+s+'−'+n:g+'−'+n;done=false;
+  }else if(k==='DEL'){if(done){expr='';done=false}else expr=expr.slice(0,-1)}
+  else if(k==='AC'){expr='';last='';done=false}
+  else if(k==='='){
+    if(!expr||done)return;
+    const r=evalExpr(expr);if(r===null)return;
+    if(isNaN(r)){err=true;errMsg='Can’t divide by zero'}
+    else{const s=str(r);if(s===null){err=true;errMsg='Number too large'}else{last=expr.replace(/[+−×÷]+$/,'');addHist(last,s);expr=s;done=true;$('res').classList.remove('pop');void $('res').offsetWidth;$('res').classList.add('pop')}}
+  }
+  render();
+}
+const hist=[];
+function addHist(e,r){hist.unshift({e,r});if(hist.length>20)hist.pop();drawHist()}
+function drawHist(){const h=$('hist');h.innerHTML=hist.length?'':'<p>No calculations yet</p>';
+  hist.forEach(x=>{const d=document.createElement('div');d.innerHTML=`<span>${pretty(x.e)} =</span><b>${fmt(x.r)}</b>`;d.onclick=()=>{expr=x.r;done=false;err=false;render()};h.appendChild(d)})}
+const toggleHist=()=>$('hist').classList.toggle('open');
+function toggleTheme(){const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=dark?'light':'dark'}
+function hint(t){$('exp').textContent=t;setTimeout(render,1200)}
+function copy(){const t=$('res').textContent.replace(/,/g,'').replace('−','-');
+  if(!navigator.clipboard)return hint('Copy not available');navigator.clipboard.writeText(t).then(()=>hint('Copied!'),()=>hint('Copy not available'))}
+$('hbtn').onclick=toggleHist;$('tbtn').onclick=toggleTheme;$('res').onclick=copy;drawHist();
+$('keys').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  const r=b.getBoundingClientRect(),s=Math.max(r.width,r.height),sp=document.createElement('span');sp.className='rip';
+  sp.style.cssText=`width:${s}px;height:${s}px;left:${e.clientX-r.left-s/2}px;top:${e.clientY-r.top-s/2}px`;
+  b.appendChild(sp);setTimeout(()=>sp.remove(),500);press(b.dataset.k);b.blur()});
+
+const map={',':'.','-':'−','*':'×','x':'×','X':'×','/':'÷','Enter':'=','Backspace':'DEL','Escape':'AC','Delete':'AC'};
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key==='h'||e.key==='H')return toggleHist();
+  if(e.key==='t'||e.key==='T')return toggleTheme();
+  if(e.key==='c'||e.key==='C')return copy();
+  let k=map[e.key]||e.key;
+  if(!/^(\d|\.|\+|−|×|÷|%|=|AC|DEL)$/.test(k))return;
+  e.preventDefault();press(k);
+  const b=document.querySelector(`[data-k="${k}"]`);if(b){b.classList.add('press');setTimeout(()=>b.classList.remove('press'),130)}
+});
+render();
+</script>
+</body>
+</html>
